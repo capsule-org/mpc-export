@@ -20,7 +20,6 @@ import (
 type Network struct {
 	parties          party.IDSlice
 	listenChannels   map[party.ID]chan *protocol.Message
-	done             chan struct{}
 	closedListenChan chan *protocol.Message
 	mtx              sync.Mutex
 }
@@ -41,7 +40,6 @@ func (n *Network) init() {
 	for _, id := range n.parties {
 		n.listenChannels[id] = make(chan *protocol.Message, N*N)
 	}
-	n.done = make(chan struct{})
 }
 
 func (n *Network) Next(id party.ID) <-chan *protocol.Message {
@@ -67,31 +65,11 @@ func (n *Network) Send(msg *protocol.Message) {
 	}
 }
 
-func (n *Network) Done(id party.ID) chan struct{} {
-	n.mtx.Lock()
-	defer n.mtx.Unlock()
-	if _, ok := n.listenChannels[id]; ok {
-		close(n.listenChannels[id])
-		delete(n.listenChannels, id)
-	}
-	if len(n.listenChannels) == 0 {
-		close(n.done)
-	}
-	return n.done
-}
-
-// func (n *Network) Quit(id party.ID) {
-// 	n.mtx.Lock()
-// 	defer n.mtx.Unlock()
-// 	n.parties = n.parties.Remove(id)
-// }
-
 func handlerLoop(id party.ID, h protocol.Handler, network *Network) {
 	for {
 		select {
 		case msg, ok := <-h.Listen():
 			if !ok {
-				<-network.Done(id)
 				return
 			}
 			go network.Send(msg)
@@ -113,11 +91,11 @@ func runSign(hash []byte, configSender *keygen.ConfigSender, configReceiver *key
 	defer pl.TearDown()
 
 	session := uuid.New()
-	h0, err := protocol.NewTwoPartyHandler(doerner.SignReceiver(configReceiver, partyIDs[0], partyIDs[1], hash, pl), session[:], true)
+	handlerUser, err := protocol.NewTwoPartyHandler(doerner.SignReceiver(configReceiver, partyIDs[0], partyIDs[1], hash, pl), session[:], true)
 	if err != nil {
 		return nil, err
 	}
-	h1, err := protocol.NewTwoPartyHandler(doerner.SignSender(configSender, partyIDs[1], partyIDs[0], hash, pl), session[:], true)
+	handlerCapsule, err := protocol.NewTwoPartyHandler(doerner.SignSender(configSender, partyIDs[1], partyIDs[0], hash, pl), session[:], true)
 	if err != nil {
 		return nil, err
 	}
@@ -125,15 +103,15 @@ func runSign(hash []byte, configSender *keygen.ConfigSender, configReceiver *key
 	var wg sync.WaitGroup
 	network := NewNetwork(partyIDs)
 	wg.Add(2)
-	go runHandler(&wg, partyIDs[0], h0, network)
-	go runHandler(&wg, partyIDs[1], h1, network)
+	go runHandler(&wg, partyIDs[0], handlerUser, network)
+	go runHandler(&wg, partyIDs[1], handlerCapsule, network)
 	wg.Wait()
 
-	resultRound0, err := h0.Result()
+	result, err := handlerUser.Result()
 	if err != nil {
 		return nil, err
 	}
-	sig, ok := resultRound0.(*ecdsa.Signature)
+	sig, ok := result.(*ecdsa.Signature)
 	if !ok {
 		return nil, errors.New("error casting result to Signature")
 	}
