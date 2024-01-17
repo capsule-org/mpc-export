@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"sync"
 
 	mpcsigner "github.com/capsule-org/go-sdk/signer"
@@ -138,12 +140,23 @@ func main() {
 	fmt.Println("address:")
 	fmt.Println(address)
 
+	// regex to replace non base64 characters with "ff" as it's encoded incorrectly in the pdf
+	reg, err := regexp.Compile("[^A-Za-z0-9+/=]+")
+	if err != nil {
+		fmt.Println("error compiling regex:", err)
+		return
+	}
+
+	cleanCapsuleShareConfig := reg.ReplaceAllString(
+		strings.ReplaceAll(capsuleShareConfig, " ", ""),
+		"ff",
+	)
 	capsuleShare := fmt.Sprintf(
 		`{"walletId":"%s","id":"%s","otherId":"%s","receiverConfig":"%s","senderConfig":"%s","isReceiver":%t,"disableWebSockets":%t}`,
 		userSigner.GetWalletId(),
 		"CAPSULE",
 		"USER",
-		capsuleShareConfig,
+		cleanCapsuleShareConfig,
 		"9g==",
 		true,
 		false,
