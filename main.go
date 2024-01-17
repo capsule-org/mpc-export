@@ -24,7 +24,7 @@ type Network struct {
 	mtx              sync.Mutex
 }
 
-func NewNetwork(parties party.IDSlice) *Network {
+func newNetwork(parties party.IDSlice) *Network {
 	closed := make(chan *protocol.Message)
 	close(closed)
 	c := &Network{
@@ -42,7 +42,7 @@ func (n *Network) init() {
 	}
 }
 
-func (n *Network) Next(id party.ID) <-chan *protocol.Message {
+func (n *Network) next(id party.ID) <-chan *protocol.Message {
 	n.mtx.Lock()
 	defer n.mtx.Unlock()
 	if len(n.listenChannels) == 0 {
@@ -55,7 +55,7 @@ func (n *Network) Next(id party.ID) <-chan *protocol.Message {
 	return c
 }
 
-func (n *Network) Send(msg *protocol.Message) {
+func (n *Network) send(msg *protocol.Message) {
 	n.mtx.Lock()
 	defer n.mtx.Unlock()
 	for id, c := range n.listenChannels {
@@ -72,9 +72,9 @@ func handlerLoop(id party.ID, h protocol.Handler, network *Network) {
 			if !ok {
 				return
 			}
-			go network.Send(msg)
+			go network.send(msg)
 
-		case msg := <-network.Next(id):
+		case msg := <-network.next(id):
 			h.Accept(msg)
 		}
 	}
@@ -101,7 +101,7 @@ func runSign(hash []byte, configSender *keygen.ConfigSender, configReceiver *key
 	}
 
 	var wg sync.WaitGroup
-	network := NewNetwork(partyIDs)
+	network := newNetwork(partyIDs)
 	wg.Add(2)
 	go runHandler(&wg, partyIDs[0], handlerUser, network)
 	go runHandler(&wg, partyIDs[1], handlerCapsule, network)
