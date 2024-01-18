@@ -1,4 +1,4 @@
-module github.com/capsule-org/mpc-export-utils
+module github.com/capsule-org/mpc-export-internal
 
 go 1.19
 
