@@ -1,4 +1,4 @@
-# mpc-export-utils
+# mpc-export-internal
 
 ## Usage
 
@@ -11,4 +11,11 @@ Retrieve the backup share contents by downloading the pdf `CapsuleBackupShare.pd
 To sign a transaction run:
 ```sh
 go run main.go "contents of user share..." "contents of backup share..." "rlp encoded hash in hex..."
+```
+
+## Build
+
+To build the binary and move it to the `mpc-export` repo (assuming the `mpc-export` repo is adjacent to the current directory) run the following:
+```sh
+go build -o mpcExportBinary && mv mpcExportBinary ../mpc-export
 ```
