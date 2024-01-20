@@ -126,6 +126,17 @@ func main() {
 	capsuleShareConfig := os.Args[2]
 	rlpEncodedTxHashHex := os.Args[3]
 
+	// if userShare is the snaps recovery secret, extract the share from everything after the "|" character
+	if strings.Contains(userShare, "|") {
+		splitUserShare := strings.SplitN(userShare, "|", 2)
+		userShare = splitUserShare[1]
+	}
+
+	// remove "0x" prefix if it exists
+	if rlpEncodedTxHashHex[:2] == "0x" {
+		rlpEncodedTxHashHex = rlpEncodedTxHashHex[2:]
+	}
+
 	userSigner, err := mpcsigner.DKLSDeserializeSigner(userShare, "")
 	if err != nil {
 		fmt.Println(err)
