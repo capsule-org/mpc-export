@@ -98,6 +98,17 @@ func (s *DKLSSigner) GetPublicKey() string {
 	return "0x04" + hex.EncodeToString(rawPKey)
 }
 
+func (s *DKLSSigner) GetPrivateKey() curve.Scalar {
+	var privateKey curve.Scalar
+	if s.isReceiver {
+		privateKey = s.receiverConfig.SecretShare
+	} else {
+		privateKey = s.senderConfig.SecretShare
+	}
+
+	return privateKey
+}
+
 func (s *DKLSSigner) GetAddress() (string, error) {
 	k := keccak256.New()
 

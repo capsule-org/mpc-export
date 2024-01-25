@@ -2,7 +2,7 @@
 ## explicit; go 1.17
 github.com/btcsuite/btcd/btcec/v2
 github.com/btcsuite/btcd/btcec/v2/ecdsa
-# github.com/capsule-org/go-sdk v0.21.0
+# github.com/capsule-org/go-sdk v0.22.0
 ## explicit; go 1.19
 github.com/capsule-org/go-sdk/internal/core
 github.com/capsule-org/go-sdk/internal/network

@@ -2,7 +2,7 @@ module github.com/capsule-org/mpc-export-internal
 
 go 1.19
 
-require github.com/capsule-org/go-sdk v0.21.0
+require github.com/capsule-org/go-sdk v0.22.0
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
