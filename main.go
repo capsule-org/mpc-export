@@ -121,7 +121,7 @@ func runSign(hash []byte, configSender *keygen.ConfigSender, configReceiver *key
 	return sig, nil
 }
 
-func runExport() (curve.Scalar, curve.Scalar, error) {
+func runExport() (curve.Scalar, error) {
 	userShare := os.Args[1]
 	capsuleShareConfig := os.Args[2]
 
@@ -179,27 +179,43 @@ func runExport() (curve.Scalar, curve.Scalar, error) {
 	sk1 := userSigner.GetPrivateKey()
 	sk2 := capsuleSigner.GetPrivateKey()
 
-	sk := sk1.Mul(sk2)
-	pk := sk.ActOnBase()
+	sk := sk1.Add(sk2)
+	// pk := sk.ActOnBase()
 
-	xbytes := pk.(*curve.Secp256k1Point).XBytes()
-	ybytes := pk.(*curve.Secp256k1Point).YBytes()
-	rawPKey := append(xbytes[:], ybytes[:]...)
+	// xbytes := pk.(*curve.Secp256k1Point).XBytes()
+	// ybytes := pk.(*curve.Secp256k1Point).YBytes()
+	// rawPKey := append(xbytes[:], ybytes[:]...)
 
-	pkString := "0x04" + hex.EncodeToString(rawPKey)
+	// pkString := "0x04" + hex.EncodeToString(rawPKey)
 
-	if pkString != userSigner.GetPublicKey() {
+	// fmt.Println("not matching public key")
+	// if pkString != userSigner.GetPublicKey() {
+	// 	fmt.Println("public key does not match in error!")
+	// 	os.Exit(1)
+	// }
+
+	// fmt.Println(userSigner.GetPrivateKey())
+	// fmt.Println(capsuleSigner.GetPrivateKey())
+
+	skBytes, err := sk.MarshalBinary()
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	return userSigner.GetPrivateKey(), capsuleSigner.GetPrivateKey(), nil
+	skHex := hex.EncodeToString(skBytes)
+
+	fmt.Println("skHex:")
+	fmt.Println(skHex)
+
+	return sk, nil
 }
 
-// func main() {
-// 	runExport()
-// }
-
 func main() {
+	runExport()
+}
+
+func mainOld() {
 	fmt.Println("\n\n---------------- Generating signature with backup share ----------------\n")
 	userShare := os.Args[1]
 	capsuleShareConfig := os.Args[2]
