@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -18,7 +19,13 @@ func main() {
 	// if userShare is the snaps recovery secret, extract the share from everything after the "|" character
 	if strings.Contains(userShare, "|") {
 		splitUserShare := strings.SplitN(userShare, "|", 2)
-		userShare = splitUserShare[1]
+		decodedUserShare, err := base64.RawStdEncoding.DecodeString(splitUserShare[1])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		userShare = string(decodedUserShare)
 	}
 
 	userSigner, err := mpcsigner.DKLSDeserializeSigner(userShare, "")
