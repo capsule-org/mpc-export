@@ -22,10 +22,3 @@ USER_SHARE = "contents of the user share"
 CAPSULE_SHARE = "contents of the capsule share"
 go run main.go $USER_SHARE $CAPSULE_SHARE
 ```
-
-## Build
-
-To build the binary and move it to the `mpc-export` repo (assuming the `mpc-export` repo is adjacent to the current directory) run the following:
-```sh
-go build -o mpcExportBinary && mv mpcExportBinary ../mpc-export
-```
