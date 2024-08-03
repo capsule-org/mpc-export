@@ -95,45 +95,42 @@ func NewNetwork(parties []string, host string, headers map[string]string) *Netwo
 	return c
 }
 
-func CreateWallet(networkHost, walletId string, parties []string, headers map[string]string) {
+func CreateWallet(networkHost, walletId string, parties []string, headers map[string]string) error {
 	reqBody, _ := json.Marshal(map[string]interface{}{
 		"participantIds": parties,
 		"walletId":       walletId,
 	})
 	resp, err := PostRequest(fmt.Sprintf("%s/wallets", networkHost), bytes.NewBuffer(reqBody), headers)
 	if err != nil {
-		log.Panicln(err)
+		return err
 	}
 	respBodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Panicln(err)
+		return err
 	}
 	var respBody map[string]interface{}
-	err = json.Unmarshal(respBodyBytes, &respBody)
-	if err != nil {
-		log.Panicln(err)
-	}
+	return json.Unmarshal(respBodyBytes, &respBody)
 }
 
-func CreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) string {
+func CreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) (string, error) {
 	reqBody, _ := json.Marshal(map[string]interface{}{
 		"method": protocol,
 	})
 	resp, err := PostRequest(fmt.Sprintf("%s/wallets/%s/protocols", networkHost, walletId), bytes.NewBuffer(reqBody), headers)
 	if err != nil {
-		log.Panicln(err)
+		return "", err
 	}
 	respBodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Panicln(err)
+		return "", err
 	}
 	var respBody map[string]interface{}
 	err = json.Unmarshal(respBodyBytes, &respBody)
 	if err != nil {
-		log.Panicln(err)
+		return "", err
 	}
 
-	return respBody["protocolId"].(string)
+	return respBody["protocolId"].(string), nil
 }
 
 func (n *Network) init(id string) {
@@ -326,7 +323,10 @@ func (n *Network) sendMessage(protocolId string, msg map[string]interface{}, con
 		return err
 	}
 	// just reading response for purpose of keep-alive to take effect
-	io.Copy(ioutil.Discard, resp.Body)
+	_, err = io.Copy(ioutil.Discard, resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body: %v\n", err)
+	}
 	defer resp.Body.Close()
 	return nil
 }

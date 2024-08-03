@@ -1,43 +1,11 @@
 package signer
 
 import (
-	// "encoding/hex"
-
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 
-	"github.com/capsule-org/go-sdk/internal/network"
-	"github.com/capsule-org/multi-party-sig/pkg/math/curve"
-	"github.com/capsule-org/multi-party-sig/pkg/party"
 	"github.com/ethereum/go-ethereum/core/types"
 )
-
-func newSignerFromConfig(config string, serverUrl string) (*Signer, error) {
-	params := SignerParamsFromStr(config)
-	return newSignerFromSerial(params, serverUrl)
-}
-
-func newSignerFromSerial(p SerializableSigner, serverUrl string) (*Signer, error) {
-	s := new(Signer)
-	s.id = party.ID(p.Id)
-	idSlice := make(party.IDSlice, 0, len(p.Ids))
-
-	for _, e := range p.Ids {
-		idSlice = append(idSlice, party.ID(e))
-	}
-	s.ids = idSlice
-	s.threshold = p.Threshold
-
-	s.n = network.NewNetwork(p.Ids, serverUrl, nil)
-	s.pl = nil // pl
-	if len(idSlice) <= p.Threshold {
-		return nil, fmt.Errorf("Threshold (%d) is larger than Ids count (%d)", p.Threshold, len(idSlice))
-	}
-	s.signers = idSlice[:p.Threshold+1]
-	s.walletId = p.WalletId
-	return s, nil
-}
 
 func GetAddress(serializedSigner string) string {
 	s, err := DeserializeSigner(serializedSigner, "")
@@ -50,20 +18,6 @@ func GetAddress(serializedSigner string) string {
 	}
 	return address
 }
-
-// func GetWalletId(config string) string {
-// 	s, _ := newSignerFromConfig(config)
-// 	return s.walletId
-// }
-
-// func GetConfig(config string) []byte {
-// 	s, _ := newSignerFromConfig(config)
-// 	if s.config == nil {
-// 		return nil
-// 	}
-// 	data, _ := json.Marshal(s.config)
-// 	return data
-// }
 
 func CreateAccount(serverUrl string, serializedSigner string, protocolId string) string {
 	s, err := DeserializeSigner(serializedSigner, serverUrl)
@@ -79,7 +33,11 @@ func CreateAccount(serverUrl string, serializedSigner string, protocolId string)
 	if s.config == nil {
 		return "Error: Missing config"
 	}
-	return SerializeSigner(*s)
+	newSigner, err := SerializeSigner(*s)
+	if err != nil {
+		return err.Error()
+	}
+	return newSigner
 }
 
 func Refresh(serverUrl string, serializedSigner string, protocolId string) string {
@@ -93,7 +51,11 @@ func Refresh(serverUrl string, serializedSigner string, protocolId string) strin
 		return err.Error()
 	}
 
-	return SerializeSigner(*s)
+	newSigner, err := SerializeSigner(*s)
+	if err != nil {
+		return err.Error()
+	}
+	return newSigner
 }
 
 /**
@@ -102,23 +64,6 @@ func Refresh(serverUrl string, serializedSigner string, protocolId string) strin
 func UnlockAccount(config, r1Signature string) error {
 	// TODO: Retrieve session token from the server
 	return nil
-}
-
-// func RefreshAccount(config, protocolId string) error {
-// 	s, _ := newSignerFromConfig(config)
-// 	refreshConfig, err := core.Refresh(s.config, s.n, s.pl, protocolId)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	s.config = refreshConfig
-// 	return nil
-// }
-
-func enforceLowSValue(s curve.Scalar) curve.Scalar {
-	if s.IsOverHalfOrder() {
-		return s.Negate()
-	}
-	return s
 }
 
 func TransactionBase64ToBytes(tx string) ([]byte, error) {
@@ -311,31 +256,40 @@ func DKLSSendTransaction(serverUrl, serializedSigner, txRLPBase64, protocolId st
 	return "0x" + hex.EncodeToString(rawTxSig)
 }
 
-/**
-* Sign arbitrary hash
-* @param hashHex - input to sign encoded as a hex string
-* @param signer - Address of the signer (must be unlocked)
- */
-func SignHash(config string) {
+func ED25519CreateAccount(mpcNetworkWSHost, walletId, protocolId string) string {
+	userSigner := ED25519NewSigner(mpcNetworkWSHost, walletId, ED25519UserPartyId, ED25519CapsulePartyId, nil)
+	err := userSigner.CreateAccount(protocolId)
+	if err != nil {
+		return err.Error()
+	}
 
+	newSigner, err := ED25519SerializeSigner(userSigner)
+	if err != nil {
+		return err.Error()
+	}
+	return newSigner
 }
 
 /**
-* Decrypts an ECIES ciphertext
-* @param account - the address of the account
-* @param ciphertext - the cipher to be decrypted
-* @returns the decrypted text
+* Sign
+* @param message - The bytes to sign encoded in base64
+*                      (base64 is easier to decode in native)
  */
-func Decrypt(config string) {
+func ED25519Sign(serializedSigner, base64BytesToSign, protocolId string) string {
+	s, err := ED25519DeserializeSigner(serializedSigner)
+	if err != nil {
+		return err.Error()
+	}
 
-}
+	bytesToSign, err := TransactionBase64ToBytes(base64BytesToSign)
+	if err != nil {
+		return err.Error()
+	}
 
-/**
-* Computes an ECDH shared secret between the user's private key and another user's public key
-* @param account - the address of the account
-* @param publicKey - another user's public key in base64
-* @returns the shared secret
- */
-func ComputeSharedSecret(config string) {
+	signature, err := s.Sign(protocolId, bytesToSign)
+	if err != nil {
+		return err.Error()
+	}
 
+	return base64.StdEncoding.EncodeToString(signature.ToEd25519())
 }
