@@ -3,12 +3,9 @@
 package signer
 
 import (
-	"bytes"
 	b64 "encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"math"
 
 	"github.com/capsule-org/go-sdk/internal/network"
 	"github.com/capsule-org/multi-party-sig/pkg/math/curve"
@@ -18,36 +15,14 @@ import (
 	"github.com/fxamacker/cbor/v2"
 )
 
-func float64FromByteSlice(byteSlice []byte) float64 {
-	return math.Float64frombits(binary.LittleEndian.Uint64(byteSlice))
-}
-
-// Convert base64 string to slice of float64
-func float64SliceFromBase64String(str string) []float64 {
-	byteSlice, _ := b64.StdEncoding.DecodeString(str)
-	var floatSlice []float64
-
-	for i := 0; i < len(byteSlice)/8; i++ {
-		floatSlice = append(floatSlice, float64FromByteSlice(byteSlice[8*i:8*(i+1)]))
+func SignerParamsFromStr(signerParamsStr string) (*SerializableSigner, error) {
+	var signerParams SerializableSigner
+	err := json.Unmarshal([]byte(signerParamsStr), &signerParams)
+	if err != nil {
+		return nil, err
 	}
 
-	return floatSlice
-}
-
-// Convert slice of float64 to base64 string
-func base64StringFromFloat64Slice(arr []float64) string {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, arr)
-	data := buf.Bytes()
-
-	return b64.StdEncoding.EncodeToString([]byte(data))
-}
-
-func SignerParamsFromStr(signerParamsStr string) SerializableSigner {
-	var signerParams SerializableSigner
-	json.Unmarshal([]byte(signerParamsStr), &signerParams)
-
-	return signerParams
+	return &signerParams, nil
 }
 
 // Flattened Signer that's gone through KEYGEN
@@ -62,8 +37,7 @@ type SerializableSigner struct {
 	pl        *pool.Pool
 }
 
-// TODO handle error
-func SerializeSigner(s Signer) string {
+func SerializeSigner(s Signer) (string, error) {
 	is := new(SerializableSigner)
 	is.WalletId = s.walletId
 	is.Id = string(s.id)
@@ -79,16 +53,25 @@ func SerializeSigner(s Signer) string {
 		is.Signers[i] = string(e)
 	}
 
-	serializedConfig, _ := cbor.Marshal(s.config)
+	serializedConfig, err := cbor.Marshal(s.config)
+	if err != nil {
+		return "", err
+	}
 	is.Config = b64.StdEncoding.EncodeToString(serializedConfig)
 
-	serializedSigner, _ := json.Marshal(is)
-	return string(serializedSigner)
+	serializedSigner, err := json.Marshal(is)
+	if err != nil {
+		return "", err
+	}
+	return string(serializedSigner), nil
 }
 
 func DeserializeSigner(signerParamsStr string, serverUrl string) (*Signer, error) {
 	var signerParams SerializableSigner
-	json.Unmarshal([]byte(signerParamsStr), &signerParams)
+	err := json.Unmarshal([]byte(signerParamsStr), &signerParams)
+	if err != nil {
+		return nil, err
+	}
 	return deserializeSigner(signerParams, serverUrl)
 }
 

@@ -80,11 +80,11 @@ func NewSigner(host, walletId, id string, ids []string, threshold int, pl *pool.
 // TODO:
 // move SetNetworkClientTransport, CreateWallet, and CreateProtocol to another package in this library long-term
 // just here for easier exporting right now
-func CreateWallet(networkHost, walletId string, parties []string, headers map[string]string) {
-	network.CreateWallet(networkHost, walletId, parties, headers)
+func CreateWallet(networkHost, walletId string, parties []string, headers map[string]string) error {
+	return network.CreateWallet(networkHost, walletId, parties, headers)
 }
 
-func CreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) string {
+func CreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) (string, error) {
 	return network.CreateProtocol(networkHost, walletId, protocol, headers)
 }
 

@@ -45,11 +45,11 @@ func NewDKLSSigner(host, walletId, id, otherId string, pl *pool.Pool, receiverCo
 // TODO:
 // move SetNetworkClientTransport, CreateWallet, and CreateProtocol to another package in this library long-term
 // just here for easier exporting right now
-func DKLSCreateWallet(networkHost, walletId string, parties []string, headers map[string]string) {
-	network.CreateWallet(networkHost, walletId, parties, headers)
+func DKLSCreateWallet(networkHost, walletId string, parties []string, headers map[string]string) error {
+	return network.CreateWallet(networkHost, walletId, parties, headers)
 }
 
-func DKLSCreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) string {
+func DKLSCreateProtocol(networkHost, walletId string, protocol string, headers map[string]string) (string, error) {
 	return network.CreateProtocol(networkHost, walletId, protocol, headers)
 }
 

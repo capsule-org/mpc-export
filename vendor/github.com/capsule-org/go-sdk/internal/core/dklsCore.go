@@ -19,7 +19,10 @@ func dklsBaseKeygen(id party.ID, otherId party.ID, n *network.Network, pl *pool.
 	if err != nil {
 		return nil, err
 	}
-	network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	err = network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	if err != nil {
+		return nil, err
+	}
 
 	return handler.Result()
 }
@@ -53,7 +56,10 @@ func DKLSSenderRefresh(configSender *keygen.ConfigSender, id, otherId party.ID, 
 	if err != nil {
 		return nil, err
 	}
-	network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	err = network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	if err != nil {
+		return nil, err
+	}
 
 	resultRound, err := handler.Result()
 	if err != nil {
@@ -71,7 +77,10 @@ func DKLSReceiverRefresh(configReceiver *keygen.ConfigReceiver, id, otherId part
 	if err != nil {
 		return nil, err
 	}
-	network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	err = network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	if err != nil {
+		return nil, err
+	}
 
 	resultRound, err := handler.Result()
 	if err != nil {
@@ -89,7 +98,10 @@ func DKLSSenderSign(configSender *keygen.ConfigSender, id, otherId party.ID, has
 	if err != nil {
 		return nil, err
 	}
-	network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	err = network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	if err != nil {
+		return nil, err
+	}
 
 	resultRound, err := handler.Result()
 	if err != nil {
@@ -108,7 +120,10 @@ func DKLSReceiverSign(configReceiver *keygen.ConfigReceiver, id, otherId party.I
 	if err != nil {
 		return nil, err
 	}
-	network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	err = network.HandlerLoop(id, handler, n, protocolId, nil, useWebSocket)
+	if err != nil {
+		return nil, err
+	}
 
 	resultRound, err := handler.Result()
 	if err != nil {

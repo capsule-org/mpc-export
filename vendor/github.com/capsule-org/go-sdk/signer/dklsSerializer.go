@@ -60,7 +60,10 @@ func DKLSSerializeSigner(s DKLSSigner) (string, error) {
 
 func DKLSDeserializeSigner(signerParamsStr string, serverUrl string) (*DKLSSigner, error) {
 	var signerParams DKLSSerializableSigner
-	json.Unmarshal([]byte(signerParamsStr), &signerParams)
+	err := json.Unmarshal([]byte(signerParamsStr), &signerParams)
+	if err != nil {
+		return nil, err
+	}
 	return dklsDeserializeSigner(signerParams, serverUrl)
 }
 

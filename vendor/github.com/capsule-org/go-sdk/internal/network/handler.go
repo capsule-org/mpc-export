@@ -70,7 +70,10 @@ func HandlerLoop(id party.ID, h protocol.Handler, network *Network, protocolId s
 			if err != nil {
 				return err
 			}
-			json.Unmarshal(data, &msgMap)
+			err = json.Unmarshal(data, &msgMap)
+			if err != nil {
+				return err
+			}
 
 			pendingWrites++
 			go network.Send(protocolId, msgMap, conn, pendingWriteChan)
@@ -82,7 +85,10 @@ func HandlerLoop(id party.ID, h protocol.Handler, network *Network, protocolId s
 			if err != nil {
 				return err
 			}
-			json.Unmarshal(data, &msg)
+			err = json.Unmarshal(data, &msg)
+			if err != nil {
+				return err
+			}
 
 			h.Accept(&msg)
 			if statusFunc != nil {
