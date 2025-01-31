@@ -2,7 +2,7 @@ module github.com/capsule-org/mpc-export-internal
 
 go 1.22.5
 
-require github.com/capsule-org/go-sdk v0.24.0
+require github.com/capsule-org/go-sdk v0.25.0
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -27,9 +27,9 @@ require (
 	github.com/wealdtech/go-merkletree v1.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
